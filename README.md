@@ -175,4 +175,4 @@ Contributions to this project are welcome! Please follow these steps:
 
 For any questions or suggestions, please contact us:
 
-- Project Maintainer: [Vanilla Finance]
+- Project Maintainer: [Pay2Reach]
