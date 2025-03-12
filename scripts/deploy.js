@@ -1,10 +1,10 @@
-// Script for deploying the KOL Messaging Platform smart contract
+// Script for deploying the Pay2Reach smart contract
 // Usage: npx hardhat run scripts/deploy.js --network <network name>
 
 const hre = require("hardhat");
 
 async function main() {
-    console.log("Starting deployment of KOLMessaging contract...");
+    console.log("Starting deployment of Pay2Reach contract...");
 
     // Get the deployment account
     const [deployer] = await hre.ethers.getSigners();
@@ -15,19 +15,19 @@ async function main() {
     console.log(`Deployment account balance: ${ethers.utils.formatEther(balance)} ETH`);
 
     // Deploy the contract
-    const KOLMessaging = await hre.ethers.getContractFactory("KOLMessaging");
-    const kolMessaging = await KOLMessaging.deploy();
+    const Pay2Reach = await hre.ethers.getContractFactory("Pay2Reach");
+    const pay2Reach = await Pay2Reach.deploy();
 
-    await kolMessaging.deployed();
+    await pay2Reach.deployed();
 
-    console.log(`KOLMessaging contract deployed to address: ${kolMessaging.address}`);
+    console.log(`Pay2Reach contract deployed to address: ${pay2Reach.address}`);
     console.log("Deployment completed!");
 
     // Instructions for contract verification
     console.log("\nContract verification command:");
-    console.log(`npx hardhat verify --network ${hre.network.name} ${kolMessaging.address}`);
+    console.log(`npx hardhat verify --network ${hre.network.name} ${pay2Reach.address}`);
 
-    return { kolMessaging };
+    return { pay2Reach };
 }
 
 // Run the deployment function

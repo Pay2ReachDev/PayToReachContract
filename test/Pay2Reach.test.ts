@@ -3,8 +3,8 @@ import hre from "hardhat";
 import { getAddress, parseEther } from "viem";
 import { time } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
 
-describe("KOLMessaging Contract", function () {
-    let kolMessaging: any;
+describe("Pay2Reach Contract", function () {
+    let pay2Reach: any;
     let deployer: any;
     let kol: any;
     let user1: any;
@@ -22,21 +22,21 @@ describe("KOLMessaging Contract", function () {
         user1 = accounts[2];
         user2 = accounts[3];
 
-        // Deploy KOLMessaging contract
-        const KOLMessaging = await hre.viem.deployContract("KOLMessaging");
-        kolMessaging = KOLMessaging;
+        // Deploy Pay2Reach contract
+        const Pay2Reach = await hre.viem.deployContract("Pay2Reach");
+        pay2Reach = Pay2Reach;
     });
 
     describe("KOL Registration and Verification", function () {
         it("should allow users to register as KOL", async function () {
             // Register using kol account
-            await kolMessaging.write.registerAsKOL(
+            await pay2Reach.write.registerAsKOL(
                 [SOCIAL_MEDIA_ID, MESSAGE_PRICE],
                 { account: kol.account }
             );
 
             // Verify KOL information
-            const kolProfile = await kolMessaging.read.kolProfiles([getAddress(kol.account.address)]);
+            const kolProfile = await pay2Reach.read.kolProfiles([getAddress(kol.account.address)]);
             expect(kolProfile[0]).to.equal(getAddress(kol.account.address)); // walletAddress
             expect(kolProfile[1]).to.equal(SOCIAL_MEDIA_ID); // socialMediaId
             expect(kolProfile[2]).to.equal(false); // isVerified (initially false)
@@ -45,14 +45,14 @@ describe("KOLMessaging Contract", function () {
 
         it("should not allow duplicate registration", async function () {
             // First registration
-            await kolMessaging.write.registerAsKOL(
+            await pay2Reach.write.registerAsKOL(
                 [SOCIAL_MEDIA_ID, MESSAGE_PRICE],
                 { account: kol.account }
             );
 
             // Attempt to register again, should fail
             await expect(
-                kolMessaging.write.registerAsKOL(
+                pay2Reach.write.registerAsKOL(
                     [SOCIAL_MEDIA_ID, MESSAGE_PRICE],
                     { account: kol.account }
                 )
@@ -61,32 +61,32 @@ describe("KOLMessaging Contract", function () {
 
         it("platform owner should be able to verify KOL", async function () {
             // Register KOL
-            await kolMessaging.write.registerAsKOL(
+            await pay2Reach.write.registerAsKOL(
                 [SOCIAL_MEDIA_ID, MESSAGE_PRICE],
                 { account: kol.account }
             );
 
             // Platform owner verifies KOL
-            await kolMessaging.write.verifyKOL(
+            await pay2Reach.write.verifyKOL(
                 [getAddress(kol.account.address)],
                 { account: deployer.account }
             );
 
             // Verify that KOL has been verified
-            const kolProfile = await kolMessaging.read.kolProfiles([getAddress(kol.account.address)]);
+            const kolProfile = await pay2Reach.read.kolProfiles([getAddress(kol.account.address)]);
             expect(kolProfile[2]).to.equal(true); // isVerified
         });
 
         it("non-platform owner cannot verify KOL", async function () {
             // Register KOL
-            await kolMessaging.write.registerAsKOL(
+            await pay2Reach.write.registerAsKOL(
                 [SOCIAL_MEDIA_ID, MESSAGE_PRICE],
                 { account: kol.account }
             );
 
             // Non-platform owner attempts to verify KOL
             await expect(
-                kolMessaging.write.verifyKOL(
+                pay2Reach.write.verifyKOL(
                     [getAddress(kol.account.address)],
                     { account: user1.account }
                 )
@@ -97,12 +97,12 @@ describe("KOLMessaging Contract", function () {
     describe("Sending and Replying to Messages", function () {
         beforeEach(async function () {
             // Register and verify KOL
-            await kolMessaging.write.registerAsKOL(
+            await pay2Reach.write.registerAsKOL(
                 [SOCIAL_MEDIA_ID, MESSAGE_PRICE],
                 { account: kol.account }
             );
 
-            await kolMessaging.write.verifyKOL(
+            await pay2Reach.write.verifyKOL(
                 [getAddress(kol.account.address)],
                 { account: deployer.account }
             );
@@ -110,7 +110,7 @@ describe("KOLMessaging Contract", function () {
 
         it("users can send messages to verified KOLs", async function () {
             // Send message
-            await kolMessaging.write.sendMessage(
+            await pay2Reach.write.sendMessage(
                 [getAddress(kol.account.address), MESSAGE_CONTENT],
                 {
                     account: user1.account,
@@ -119,12 +119,12 @@ describe("KOLMessaging Contract", function () {
             );
 
             // Get message IDs received by KOL
-            const messageIds = await kolMessaging.read.getKOLMessages([getAddress(kol.account.address)]);
+            const messageIds = await pay2Reach.read.getKOLMessages([getAddress(kol.account.address)]);
             expect(messageIds.length).to.equal(1);
 
             // Verify message content
             const messageId = messageIds[0];
-            const messageDetails = await kolMessaging.read.getMessageDetails([messageId]);
+            const messageDetails = await pay2Reach.read.getMessageDetails([messageId]);
 
             expect(messageDetails[0]).to.equal(getAddress(user1.account.address)); // sender
             expect(messageDetails[1]).to.equal(MESSAGE_CONTENT); // content
@@ -133,7 +133,7 @@ describe("KOLMessaging Contract", function () {
 
         it("KOL can reply to messages", async function () {
             // Send message
-            await kolMessaging.write.sendMessage(
+            await pay2Reach.write.sendMessage(
                 [getAddress(kol.account.address), MESSAGE_CONTENT],
                 {
                     account: user1.account,
@@ -142,21 +142,21 @@ describe("KOLMessaging Contract", function () {
             );
 
             // Get message ID
-            const messageIds = await kolMessaging.read.getKOLMessages([getAddress(kol.account.address)]);
+            const messageIds = await pay2Reach.read.getKOLMessages([getAddress(kol.account.address)]);
             const messageId = messageIds[0];
 
             // KOL replies to message
-            await kolMessaging.write.answerMessage(
+            await pay2Reach.write.answerMessage(
                 [messageId],
                 { account: kol.account }
             );
 
             // Verify message has been replied to
-            const messageDetails = await kolMessaging.read.getMessageDetails([messageId]);
+            const messageDetails = await pay2Reach.read.getMessageDetails([messageId]);
             expect(messageDetails[4]).to.equal(true); // isAnswered
 
             // Verify KOL balance
-            const kolProfile = await kolMessaging.read.kolProfiles([getAddress(kol.account.address)]);
+            const kolProfile = await pay2Reach.read.kolProfiles([getAddress(kol.account.address)]);
             const platformFee = (MESSAGE_PRICE * 50n) / 1000n; // 5% fee
             const kolAmount = MESSAGE_PRICE - platformFee;
 
@@ -168,18 +168,18 @@ describe("KOLMessaging Contract", function () {
     describe("Refund Mechanism", function () {
         beforeEach(async function () {
             // Register and verify KOL
-            await kolMessaging.write.registerAsKOL(
+            await pay2Reach.write.registerAsKOL(
                 [SOCIAL_MEDIA_ID, MESSAGE_PRICE],
                 { account: kol.account }
             );
 
-            await kolMessaging.write.verifyKOL(
+            await pay2Reach.write.verifyKOL(
                 [getAddress(kol.account.address)],
                 { account: deployer.account }
             );
 
             // Send message
-            await kolMessaging.write.sendMessage(
+            await pay2Reach.write.sendMessage(
                 [getAddress(kol.account.address), MESSAGE_CONTENT],
                 {
                     account: user1.account,
@@ -190,7 +190,7 @@ describe("KOLMessaging Contract", function () {
 
         it("users can get partial refund after response time limit", async function () {
             // Get message ID
-            const messageIds = await kolMessaging.read.getKOLMessages([getAddress(kol.account.address)]);
+            const messageIds = await pay2Reach.read.getKOLMessages([getAddress(kol.account.address)]);
             const messageId = messageIds[0];
 
             // Fast forward time beyond response time limit (5 days)
@@ -203,7 +203,7 @@ describe("KOLMessaging Contract", function () {
             });
 
             // Process refund, providing KOL address as second parameter
-            await kolMessaging.write.processRefund(
+            await pay2Reach.write.processRefund(
                 [messageId, getAddress(kol.account.address)],
                 { account: user1.account }
             );
@@ -218,18 +218,18 @@ describe("KOLMessaging Contract", function () {
             expect(newBalance > initialBalance).to.be.true;
 
             // Verify message status
-            const messageDetails = await kolMessaging.read.getMessageDetails([messageId]);
+            const messageDetails = await pay2Reach.read.getMessageDetails([messageId]);
             expect(messageDetails[4]).to.equal(true); // isAnswered (marked as answered to prevent duplicate refunds)
         });
 
         it("cannot get refund within response time limit", async function () {
             // Get message ID
-            const messageIds = await kolMessaging.read.getKOLMessages([getAddress(kol.account.address)]);
+            const messageIds = await pay2Reach.read.getKOLMessages([getAddress(kol.account.address)]);
             const messageId = messageIds[0];
 
             // Attempt to process refund (should fail because response time limit has not been exceeded)
             await expect(
-                kolMessaging.write.processRefund(
+                pay2Reach.write.processRefund(
                     [messageId, getAddress(kol.account.address)],
                     { account: user1.account }
                 )
@@ -240,18 +240,18 @@ describe("KOLMessaging Contract", function () {
     describe("KOL Withdrawal", function () {
         beforeEach(async function () {
             // Register and verify KOL
-            await kolMessaging.write.registerAsKOL(
+            await pay2Reach.write.registerAsKOL(
                 [SOCIAL_MEDIA_ID, MESSAGE_PRICE],
                 { account: kol.account }
             );
 
-            await kolMessaging.write.verifyKOL(
+            await pay2Reach.write.verifyKOL(
                 [getAddress(kol.account.address)],
                 { account: deployer.account }
             );
 
             // Send message
-            await kolMessaging.write.sendMessage(
+            await pay2Reach.write.sendMessage(
                 [getAddress(kol.account.address), MESSAGE_CONTENT],
                 {
                     account: user1.account,
@@ -260,8 +260,8 @@ describe("KOLMessaging Contract", function () {
             );
 
             // Get message ID and reply
-            const messageIds = await kolMessaging.read.getKOLMessages([getAddress(kol.account.address)]);
-            await kolMessaging.write.answerMessage(
+            const messageIds = await pay2Reach.read.getKOLMessages([getAddress(kol.account.address)]);
+            await pay2Reach.write.answerMessage(
                 [messageIds[0]],
                 { account: kol.account }
             );
@@ -275,7 +275,7 @@ describe("KOLMessaging Contract", function () {
             });
 
             // KOL withdraws balance
-            await kolMessaging.write.withdrawKOLBalance(
+            await pay2Reach.write.withdrawKOLBalance(
                 [],
                 { account: kol.account }
             );
@@ -287,7 +287,7 @@ describe("KOLMessaging Contract", function () {
             expect(newBalance > initialBalance).to.be.true;
 
             // Verify KOL's available balance in contract has been zeroed
-            const kolProfile = await kolMessaging.read.kolProfiles([getAddress(kol.account.address)]);
+            const kolProfile = await pay2Reach.read.kolProfiles([getAddress(kol.account.address)]);
             expect(kolProfile[5]).to.equal(0n); // availableBalance
         });
     });

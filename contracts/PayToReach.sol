@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
- * @title KOLMessaging
+ * @title Pay2Reach
  * @dev A platform for messaging Key Opinion Leaders (KOLs) on BSC
  */
-contract PaytoReach is Ownable, ReentrancyGuard {
+contract Pay2Reach is Ownable, ReentrancyGuard {
     // Maximum message length (2000 characters)
     uint256 public constant MAX_MESSAGE_LENGTH = 2000;
 
