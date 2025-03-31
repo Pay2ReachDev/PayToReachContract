@@ -3,10 +3,10 @@
   "diamondAddress": "0x6fa9963994079b9aad352c7d60194bb9bff3f71d",
   "facets": {
     "DiamondCutFacet": "0x77dd0f6826e084a7cefeb3e770e0ebacb945d200",
-    "DiamondLoupeFacet": "0x84dd0ca2a4b247e052bea6fdc5b520b9cdf33f03",
-    "OwnershipFacet": "0x2329490beea8641262ad7eb1c2988850463b747d",
-    "PayToReachManageFacet": "0xd3b523ca63793ffedfb9c0739ab1c86bcec35f31",
-    "Pay2ReachOrderFacet": "0x5cc9640d8d3ce3bdc834a158ee8a064566ba8d97",
-    "Pay2ReachPayFacet": "0xbfd3317945b0ca7709d80ee7ed0f51c3180631b2"
+    "DiamondLoupeFacet": "0x5Cc9640d8d3ce3bdC834a158ee8A064566ba8d97",
+    "OwnershipFacet": "0x6FA9963994079B9Aad352C7D60194bB9BFF3f71D",
+    "PayToReachManageFacet": "0x179D389Fae0d8DA1aBae00300a09144B6F479856",
+    "Pay2ReachOrderFacet": "0x76028C2C668F3d0Dd7990892Adaa3cAA58213E62",
+    "Pay2ReachPayFacet": "0x0761a05e5c05C103C59Cd150A4930c55EFd45547"
   }
 }

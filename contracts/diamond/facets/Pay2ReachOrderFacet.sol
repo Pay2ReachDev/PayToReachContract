@@ -80,6 +80,9 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
         } else {
             revert("Sender social media id does not match");
         }
+
+        Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(address(this));
+        payFacet.refundTokens(_id, msg.sender);
     }
 
     function answerOrder(uint256 _id, address _kolAddress) external {

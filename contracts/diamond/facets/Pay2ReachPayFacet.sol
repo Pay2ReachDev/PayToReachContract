@@ -30,6 +30,12 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
         address tokenAddress,
         uint256 fee
     );
+    event TokensRefunded(
+        uint256 indexed orderId,
+        address indexed sender,
+        uint256 amount,
+        address tokenAddress
+    );
 
     /**
      * @dev Collect tokens from user when an order is created
@@ -66,6 +72,26 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
         }
 
         emit TokensCollected(_orderId, _sender, _amount, _tokenAddress);
+    }
+
+    function refundTokens(
+        uint256 _orderId,
+        address _sender
+    ) external nonReentrant onlyOwnerOrSelf {
+        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
+        LibAppStorage.Order storage order = s.orders[_orderId];
+
+        require(order.id == _orderId, "Order does not exist");
+        require(
+            order.status == LibAppStorage.OrderStatus.Pending,
+            "Order is not pending"
+        );
+
+        // Transfer tokens from contract to sender using SafeERC20
+        IERC20 token = IERC20(order.token);
+        token.safeTransfer(_sender, order.amount);
+
+        emit TokensRefunded(_orderId, _sender, order.amount, order.token);
     }
 
     /**

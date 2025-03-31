@@ -3,11 +3,13 @@ pragma solidity ^0.8.28;
 
 import "../libraries/LibAppStorage.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "../LibDiamond.sol";
 
 contract PayToReachManageFacet is ReentrancyGuard {
     using LibAppStorage for LibAppStorage.AppStorage;
 
     function setConfig(LibAppStorage.Config memory _config) external {
+        LibDiamond.enforceIsContractOwner();
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         s.config = _config;
     }
