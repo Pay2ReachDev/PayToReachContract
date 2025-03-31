@@ -1,0 +1,12 @@
+{
+  "network": "bscMainnet",
+  "diamondAddress": "0xd3b523ca63793ffedfb9c0739ab1c86bcec35f31",
+  "facets": {
+    "DiamondCutFacet": "0x01f039da845b69b5b7532f791635581a3ce21b4b",
+    "DiamondLoupeFacet": "0x6c5c2f62c9be8d487e0ea95da36349b7f3d90b61",
+    "OwnershipFacet": "0xd96c14c8a8c8ca597da1e53cb9c295783620b59b",
+    "PayToReachManageFacet": "0x77dd0f6826e084a7cefeb3e770e0ebacb945d200",
+    "Pay2ReachOrderFacet": "0x84dd0ca2a4b247e052bea6fdc5b520b9cdf33f03",
+    "Pay2ReachPayFacet": "0x2329490beea8641262ad7eb1c2988850463b747d"
+  }
+}

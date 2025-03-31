@@ -1,0 +1,12 @@
+{
+  "network": "bscTestnet",
+  "diamondAddress": "0x6fa9963994079b9aad352c7d60194bb9bff3f71d",
+  "facets": {
+    "DiamondCutFacet": "0x77dd0f6826e084a7cefeb3e770e0ebacb945d200",
+    "DiamondLoupeFacet": "0x84dd0ca2a4b247e052bea6fdc5b520b9cdf33f03",
+    "OwnershipFacet": "0x2329490beea8641262ad7eb1c2988850463b747d",
+    "PayToReachManageFacet": "0xd3b523ca63793ffedfb9c0739ab1c86bcec35f31",
+    "Pay2ReachOrderFacet": "0x5cc9640d8d3ce3bdc834a158ee8a064566ba8d97",
+    "Pay2ReachPayFacet": "0xbfd3317945b0ca7709d80ee7ed0f51c3180631b2"
+  }
+}
