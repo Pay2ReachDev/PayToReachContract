@@ -101,9 +101,6 @@ async function main() {
 
     // List of facets to update (excluding DiamondCutFacet to avoid breaking the upgrade mechanism)
     const facetsToUpdate = [
-        "DiamondLoupeFacet",
-        "OwnershipFacet",
-        "PayToReachManageFacet",
         "Pay2ReachOrderFacet",
         "Pay2ReachPayFacet"
     ];
