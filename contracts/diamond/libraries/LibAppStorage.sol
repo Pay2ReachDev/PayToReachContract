@@ -14,7 +14,6 @@ library LibAppStorage {
     enum OrderStatus {
         Pending,
         Answered,
-        Expired,
         Cancelled
     }
 

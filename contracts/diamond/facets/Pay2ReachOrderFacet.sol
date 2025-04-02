@@ -119,7 +119,7 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
         uint256 _id,
         address _tokenAddress,
         uint256 _amount
-    ) internal nonReentrant {
+    ) internal {
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         LibAppStorage.Order storage order = s.orders[_id];
         require(
