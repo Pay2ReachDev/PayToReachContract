@@ -11,6 +11,9 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
     using LibAppStorage for LibAppStorage.AppStorage;
     using EnumerableSet for EnumerableSet.UintSet;
 
+    // Address constant for representing ETH
+    address constant ETH_ADDRESS = address(0);
+
     function createOrder(
         uint256 _id,
         string memory _senderSocialMediaId,
@@ -18,12 +21,20 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
         uint256 _amount,
         address _token,
         uint256 _deadline
-    ) external nonReentrant {
+    ) external payable nonReentrant {
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
 
         // Add order ID to the set
         if (!s.orderIds.add(_id)) {
             revert("Order already exists");
+        }
+
+        // For ETH payments, validate amount
+        if (_token == ETH_ADDRESS) {
+            require(msg.value == _amount, "Incorrect ETH amount sent");
+        } else {
+            // For token payments, ensure no ETH was sent
+            require(msg.value == 0, "ETH sent with token order");
         }
 
         s.orders[_id] = LibAppStorage.Order({
@@ -63,8 +74,10 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
 
     function cancelOrder(
         uint256 _id,
-        string memory _senderSocialMediaId
+        string memory _senderSocialMediaId,
+        uint256 _fee
     ) external nonReentrant {
+        LibDiamond.enforceIsContractOwner();
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         LibAppStorage.Order storage order = s.orders[_id];
         require(
@@ -81,11 +94,15 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
             revert("Sender social media id does not match");
         }
 
-        Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(address(this));
-        payFacet.refundTokens(_id, msg.sender);
+        Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(payable(address(this)));
+        payFacet.refundTokens(_id, msg.sender, _fee);
     }
 
-    function answerOrder(uint256 _id, address _kolAddress) external {
+    function answerOrder(
+        uint256 _id,
+        address _kolAddress,
+        uint256 _fee
+    ) external {
         LibDiamond.enforceIsContractOwner();
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         LibAppStorage.Order storage order = s.orders[_id];
@@ -93,11 +110,11 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
         order.status = LibAppStorage.OrderStatus.Answered;
 
         // Pay tokens to KOL
-        Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(address(this));
-        payFacet.payTokens(_id, _kolAddress);
+        Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(payable(address(this)));
+        payFacet.payTokens(_id, _kolAddress, _fee);
     }
 
-    // New function to collect tokens for an order
+    // Modified function to collect tokens for an order
     function _collectOrderTokens(
         uint256 _id,
         address _tokenAddress,
@@ -110,8 +127,16 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
             "Order is not pending"
         );
 
-        // Collect tokens from sender
-        Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(address(this));
-        payFacet.collectTokens(_id, _amount, _tokenAddress, msg.sender);
+        // Handle ETH differently from ERC20 tokens
+        if (_tokenAddress == ETH_ADDRESS) {
+            // ETH is already transferred in the payable function
+            // No need to do anything here
+        } else {
+            // Collect ERC20 tokens from sender
+            Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(
+                payable(address(this))
+            );
+            payFacet.collectTokens(_id, _amount, _tokenAddress, msg.sender);
+        }
     }
 }

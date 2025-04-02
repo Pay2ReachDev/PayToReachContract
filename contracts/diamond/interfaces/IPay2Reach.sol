@@ -21,12 +21,13 @@ interface IPay2Reach {
 
     function cancelOrder(
         uint256 _id,
-        string memory _senderSocialMediaId
+        string memory _senderSocialMediaId,
+        uint256 _fee
     ) external;
 
-    function answerOrder(uint256 _id, address _kolAddress) external;
-
-    function setConfig(LibAppStorage.Config memory _config) external;
-
-    function getConfig() external view returns (LibAppStorage.Config memory);
+    function answerOrder(
+        uint256 _id,
+        address _kolAddress,
+        uint256 _fee
+    ) external;
 }

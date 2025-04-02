@@ -11,6 +11,9 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
     using LibAppStorage for LibAppStorage.AppStorage;
     using SafeERC20 for IERC20;
 
+    // Address constant for representing ETH
+    address constant ETH_ADDRESS = address(0);
+
     modifier onlyOwnerOrSelf() {
         LibDiamond.enforceIsContractOwnerOrSelf();
         _;
@@ -34,7 +37,8 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
         uint256 indexed orderId,
         address indexed sender,
         uint256 amount,
-        address tokenAddress
+        address tokenAddress,
+        uint256 fee
     );
 
     /**
@@ -49,7 +53,7 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
         uint256 _amount,
         address _tokenAddress,
         address _sender
-    ) external nonReentrant onlyOwnerOrSelf {
+    ) external onlyOwnerOrSelf {
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         LibAppStorage.Order storage order = s.orders[_orderId];
 
@@ -59,7 +63,10 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
             "Order is not pending"
         );
         require(_amount > 0, "Amount must be greater than 0");
-        require(_tokenAddress != address(0), "Invalid token address");
+        require(
+            _tokenAddress != ETH_ADDRESS,
+            "Use createOrder for ETH payments"
+        );
 
         // Transfer tokens from sender to contract using SafeERC20
         IERC20 token = IERC20(_tokenAddress);
@@ -76,22 +83,45 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
 
     function refundTokens(
         uint256 _orderId,
-        address _sender
-    ) external nonReentrant onlyOwnerOrSelf {
+        address _sender,
+        uint256 _fee
+    ) external onlyOwnerOrSelf {
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         LibAppStorage.Order storage order = s.orders[_orderId];
 
         require(order.id == _orderId, "Order does not exist");
         require(
-            order.status == LibAppStorage.OrderStatus.Pending,
-            "Order is not pending"
+            order.status == LibAppStorage.OrderStatus.Pending ||
+                order.status == LibAppStorage.OrderStatus.Cancelled,
+            "Order must be pending or cancelled for refund"
         );
 
-        // Transfer tokens from contract to sender using SafeERC20
-        IERC20 token = IERC20(order.token);
-        token.safeTransfer(_sender, order.amount);
+        require(_fee < order.amount, "Fee is greater than amount");
 
-        emit TokensRefunded(_orderId, _sender, order.amount, order.token);
+        uint256 amount = order.amount - _fee;
+
+        if (order.token == ETH_ADDRESS) {
+            // Transfer ETH from contract to sender
+            (bool success, ) = payable(_sender).call{value: amount}("");
+            require(success, "ETH transfer failed");
+
+            if (_fee > 0) {
+                (bool successFee, ) = payable(LibDiamond.contractOwner()).call{
+                    value: _fee
+                }("");
+                require(successFee, "Fee transfer failed");
+            }
+        } else {
+            // Transfer tokens from contract to sender using SafeERC20
+            IERC20 token = IERC20(order.token);
+            token.safeTransfer(_sender, amount);
+
+            if (_fee > 0) {
+                token.safeTransfer(LibDiamond.contractOwner(), _fee);
+            }
+        }
+
+        emit TokensRefunded(_orderId, _sender, order.amount, order.token, _fee);
     }
 
     /**
@@ -101,8 +131,9 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
      */
     function payTokens(
         uint256 _orderId,
-        address _kolAddress
-    ) external nonReentrant onlyOwnerOrSelf {
+        address _kolAddress,
+        uint256 _fee
+    ) external onlyOwnerOrSelf {
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         LibAppStorage.Order storage order = s.orders[_orderId];
 
@@ -112,26 +143,31 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
             "Order is not answered"
         );
         require(_kolAddress != address(0), "Invalid KOL address");
+        require(_fee < order.amount, "Fee is greater than amount");
 
-        uint256 fee = calculateFee(order.amount);
-        uint256 amount = order.amount - fee;
+        uint256 amount = order.amount - _fee;
         address tokenAddress = order.token;
 
-        // Transfer tokens to KOL using SafeERC20
-        IERC20 token = IERC20(tokenAddress);
-        token.safeTransfer(_kolAddress, amount);
+        if (tokenAddress == ETH_ADDRESS) {
+            // Transfer ETH to KOL
+            (bool success, ) = payable(_kolAddress).call{value: amount}("");
+            require(success, "ETH transfer failed");
+            (bool successFee, ) = payable(LibDiamond.contractOwner()).call{
+                value: _fee
+            }("");
+            require(successFee, "Fee transfer failed");
+        } else {
+            // Transfer tokens to KOL using SafeERC20
+            IERC20 token = IERC20(tokenAddress);
+            token.safeTransfer(_kolAddress, amount);
+            token.safeTransfer(LibDiamond.contractOwner(), _fee);
+        }
 
-        emit TokensPaid(_orderId, _kolAddress, amount, tokenAddress, fee);
+        emit TokensPaid(_orderId, _kolAddress, amount, tokenAddress, _fee);
     }
 
-    function calculateFee(uint256 _amount) internal view returns (uint256) {
-        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
+    // Function to receive ETH
+    receive() external payable {}
 
-        require(
-            s.config.platformFee < LibAppStorage.FEE_PRECISION,
-            "Fee is too high"
-        );
-        uint256 fee = s.config.platformFee;
-        return (_amount * fee) / LibAppStorage.FEE_PRECISION;
-    }
+    fallback() external payable {}
 }
