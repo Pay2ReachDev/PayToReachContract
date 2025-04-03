@@ -131,6 +131,12 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
         if (_tokenAddress == ETH_ADDRESS) {
             // ETH is already transferred in the payable function
             // No need to do anything here
+            emit Pay2ReachPayFacet.TokensCollected(
+                _id,
+                msg.sender,
+                _amount,
+                _tokenAddress
+            );
         } else {
             // Collect ERC20 tokens from sender
             Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(
