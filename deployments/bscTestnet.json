@@ -6,7 +6,7 @@
     "DiamondLoupeFacet": "0x5Cc9640d8d3ce3bdC834a158ee8A064566ba8d97",
     "OwnershipFacet": "0x6FA9963994079B9Aad352C7D60194bB9BFF3f71D",
     "PayToReachManageFacet": "0x179D389Fae0d8DA1aBae00300a09144B6F479856",
-    "Pay2ReachOrderFacet": "0xF046051A8383c1564bA5d1d276b54dad8e7d9e2C",
-    "Pay2ReachPayFacet": "0x9c842A7Eb92d5abd0cb48E2f3dCFD09B7Ba8E7E3"
+    "Pay2ReachOrderFacet": "0xB463dcd141f61C08f60946467C44BB93e556fd13",
+    "Pay2ReachPayFacet": "0xA03376e1781103daB5b872511363ce46FCDe2305"
   }
 }

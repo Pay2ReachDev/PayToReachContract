@@ -47,7 +47,8 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
             status: LibAppStorage.OrderStatus.Pending,
             startTimestamp: block.timestamp,
             answerTimestamp: 0,
-            deadline: _deadline
+            deadline: _deadline,
+            sender: msg.sender
         });
 
         _collectOrderTokens(_id, _token, _amount);
@@ -95,7 +96,7 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
         }
 
         Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(payable(address(this)));
-        payFacet.refundTokens(_id, msg.sender, _fee);
+        payFacet.refundTokens(_id, order.sender, _fee);
     }
 
     function answerOrder(

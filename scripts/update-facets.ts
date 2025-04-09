@@ -89,8 +89,8 @@ async function checkIfFunctionExists(diamondAddress: string, selector: string): 
 }
 
 async function main() {
-    // Get network from command line or use default
-    const network = process.argv[2] || 'bscTestnet';
+    // Get network from Hardhat runtime environment
+    const network = hre.network.name;
     console.log(`Updating facets on network: ${network}`);
 
     // Read deployment data
@@ -109,9 +109,6 @@ async function main() {
 
     // List of facets to update (excluding DiamondCutFacet to avoid breaking the upgrade mechanism)
     const facetsToUpdate = [
-        "DiamondLoupeFacet",
-        "OwnershipFacet",
-        "PayToReachManageFacet",
         "Pay2ReachOrderFacet",
         "Pay2ReachPayFacet"
     ];

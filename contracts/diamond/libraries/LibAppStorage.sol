@@ -29,6 +29,7 @@ library LibAppStorage {
         uint256 startTimestamp;
         uint256 answerTimestamp;
         uint256 deadline;
+        address sender;
     }
 
     struct AppStorage {
