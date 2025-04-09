@@ -104,8 +104,15 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
         uint256 _fee
     ) external {
         LibDiamond.enforceIsContractOwner();
+
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         LibAppStorage.Order storage order = s.orders[_id];
+
+        require(
+            order.status == LibAppStorage.OrderStatus.Pending,
+            "Order is not pending"
+        );
+
         order.answerTimestamp = block.timestamp;
         order.status = LibAppStorage.OrderStatus.Answered;
 

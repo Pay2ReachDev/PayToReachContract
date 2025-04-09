@@ -1,12 +1,11 @@
 {
   "network": "bscMainnet",
-  "diamondAddress": "0xd3b523ca63793ffedfb9c0739ab1c86bcec35f31",
+  "diamondAddress": "0xcd9ea3f3414ddf25550c6662c0294a165dcb88b7",
   "facets": {
-    "DiamondCutFacet": "0x01f039da845b69b5b7532f791635581a3ce21b4b",
-    "DiamondLoupeFacet": "0x6c5c2f62c9be8d487e0ea95da36349b7f3d90b61",
-    "OwnershipFacet": "0xd96c14c8a8c8ca597da1e53cb9c295783620b59b",
-    "PayToReachManageFacet": "0x77dd0f6826e084a7cefeb3e770e0ebacb945d200",
-    "Pay2ReachOrderFacet": "0x84dd0ca2a4b247e052bea6fdc5b520b9cdf33f03",
-    "Pay2ReachPayFacet": "0x2329490beea8641262ad7eb1c2988850463b747d"
+    "DiamondCutFacet": "0x196dd3e6e6fa0094a70c99a870a496befc90a1bb",
+    "DiamondLoupeFacet": "0x3cc475635e687f4346a520abfc68905e9f690f71",
+    "OwnershipFacet": "0xac398100326750b14cd81f796eed7da9e4afffc7",
+    "Pay2ReachOrderFacet": "0x59b9b6b22fb40a63c169aa79676f4bdb39c8e72c",
+    "Pay2ReachPayFacet": "0xd7bab1da44c8597884d84b43f7f6e63ac8d512f4"
   }
 }

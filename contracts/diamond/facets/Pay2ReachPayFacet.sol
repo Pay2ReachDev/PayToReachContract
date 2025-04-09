@@ -41,6 +41,16 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
         uint256 fee
     );
 
+    function setFeeRecipient(address _feeRecipient) external onlyOwnerOrSelf {
+        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
+        s.config.platformFee = _feeRecipient;
+    }
+
+    function getFeeRecipient() external view returns (address) {
+        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
+        return s.config.platformFee;
+    }
+
     /**
      * @dev Collect tokens from user when an order is created
      * @param _orderId The ID of the order
@@ -106,7 +116,7 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
             require(success, "ETH transfer failed");
 
             if (_fee > 0) {
-                (bool successFee, ) = payable(LibDiamond.contractOwner()).call{
+                (bool successFee, ) = payable(s.config.platformFee).call{
                     value: _fee
                 }("");
                 require(successFee, "Fee transfer failed");
@@ -117,7 +127,7 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
             token.safeTransfer(_sender, amount);
 
             if (_fee > 0) {
-                token.safeTransfer(LibDiamond.contractOwner(), _fee);
+                token.safeTransfer(s.config.platformFee, _fee);
             }
         }
 
@@ -152,15 +162,19 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
             // Transfer ETH to KOL
             (bool success, ) = payable(_kolAddress).call{value: amount}("");
             require(success, "ETH transfer failed");
-            (bool successFee, ) = payable(LibDiamond.contractOwner()).call{
-                value: _fee
-            }("");
-            require(successFee, "Fee transfer failed");
+            if (_fee > 0) {
+                (bool successFee, ) = payable(s.config.platformFee).call{
+                    value: _fee
+                }("");
+                require(successFee, "Fee transfer failed");
+            }
         } else {
             // Transfer tokens to KOL using SafeERC20
             IERC20 token = IERC20(tokenAddress);
             token.safeTransfer(_kolAddress, amount);
-            token.safeTransfer(LibDiamond.contractOwner(), _fee);
+            if (_fee > 0) {
+                token.safeTransfer(s.config.platformFee, _fee);
+            }
         }
 
         emit TokensPaid(_orderId, _kolAddress, amount, tokenAddress, _fee);

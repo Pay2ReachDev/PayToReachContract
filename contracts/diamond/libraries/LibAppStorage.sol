@@ -8,7 +8,8 @@ library LibAppStorage {
 
     struct Config {
         uint256 responseTimeLimit;
-        uint256 platformFee;
+        address platformFee;
+        uint256 platformFeePercentage;
     }
 
     enum OrderStatus {

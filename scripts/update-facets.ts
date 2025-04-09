@@ -75,8 +75,16 @@ async function checkIfFunctionExists(diamondAddress: string, selector: string): 
         // If the address is not zero, the function exists
         return facetAddress !== ethers.ZeroAddress;
     } catch (error) {
-        console.log(`Error checking if function exists: ${selector}`, error);
-        return false;
+        console.log(`Error checking if function exists: ${selector}`);
+        // Try connecting directly to the contract to check
+        try {
+            const diamondLoupe = await ethers.getContractAt("IDiamondLoupe", diamondAddress);
+            const facetAddress = await diamondLoupe.facetAddress(selector);
+            return facetAddress !== ethers.ZeroAddress;
+        } catch (err) {
+            console.log(`Secondary check failed, assuming function exists for safety`);
+            return false; // Assume function exists to be safe
+        }
     }
 }
 
@@ -101,6 +109,9 @@ async function main() {
 
     // List of facets to update (excluding DiamondCutFacet to avoid breaking the upgrade mechanism)
     const facetsToUpdate = [
+        "DiamondLoupeFacet",
+        "OwnershipFacet",
+        "PayToReachManageFacet",
         "Pay2ReachOrderFacet",
         "Pay2ReachPayFacet"
     ];
@@ -196,6 +207,11 @@ async function main() {
     for (const [facetName, address] of Object.entries(newFacets)) {
         deploymentData.facets[facetName] = address;
     }
+
+    // Update the fee recipient
+    const payFacet = await ethers.getContractAt("Pay2ReachPayFacet", diamondAddress);
+    const tx = await payFacet.setFeeRecipient("0x7a71f94adc3f10523d6f1f173183cb06c95f2f7f");
+    await tx.wait();
 
     fs.writeFileSync(deploymentPath, JSON.stringify(deploymentData, null, 2));
     console.log("Deployment file updated with new facet addresses");

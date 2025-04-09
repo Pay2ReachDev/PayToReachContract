@@ -1,9 +1,10 @@
 import { createWalletClient, http, parseEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { hardhat } from "viem/chains";
-import hre from "hardhat";
+import hre, { ethers } from "hardhat";
 import * as fs from "fs";
 import * as path from "path";
+import { Interface } from "@ethersproject/abi";
 
 async function deployContract(name: string, constructorArgs: any[] = []) {
     console.log(`Deploying ${name}...`);
@@ -66,7 +67,6 @@ async function main() {
     const { address: diamondCutFacetAddress } = await deployContract("DiamondCutFacet");
     const { address: diamondLoupeFacetAddress } = await deployContract("DiamondLoupeFacet");
     const { address: ownershipFacetAddress } = await deployContract("OwnershipFacet");
-    const { address: payToReachManageFacetAddress } = await deployContract("PayToReachManageFacet");
     const { address: pay2ReachOrderFacetAddress } = await deployContract("Pay2ReachOrderFacet");
     const { address: pay2ReachPayFacetAddress } = await deployContract("Pay2ReachPayFacet");
 
@@ -76,6 +76,96 @@ async function main() {
         diamondCutFacetAddress
     ]);
 
+    //add facets to the diamond
+    const FacetCutAction = { Add: 0, Replace: 1, Remove: 2 };
+
+    // Get function selectors from facet ABIs
+    const getSelectorsFromABI = (contractName: string) => {
+        let artifactPath;
+        if (contractName === "DiamondCutFacet" || contractName === "DiamondLoupeFacet" || contractName === "OwnershipFacet") {
+            artifactPath = path.join(__dirname, `../artifacts/contracts/diamond/facets/${contractName}.sol/${contractName}.json`);
+        } else if (contractName.startsWith("PayToReach") || contractName.startsWith("Pay2Reach")) {
+            artifactPath = path.join(__dirname, `../artifacts/contracts/diamond/facets/${contractName}.sol/${contractName}.json`);
+        } else {
+            artifactPath = path.join(__dirname, `../artifacts/contracts/${contractName}.sol/${contractName}.json`);
+        }
+
+        console.log(`Reading ABI from: ${artifactPath}`);
+        const artifact = require(artifactPath);
+        const abi = artifact.abi;
+
+        // Get selectors from ABI
+        const selectors: string[] = [];
+        const iface = new Interface(abi);
+
+        // Using a type assertion for Object.values
+        const fragments: any[] = Object.values(iface.fragments);
+        for (const fragment of fragments) {
+            if (fragment.type === 'function' && fragment.name !== 'init') {
+                try {
+                    const selector = iface.getSighash(fragment);
+                    selectors.push(selector);
+                } catch (err) {
+                    console.warn(`Error getting selector for ${fragment.name}:`, err);
+                }
+            }
+        }
+
+        return selectors;
+    };
+
+    let diamondLoupeSelectors: string[] = [];
+    let ownershipSelectors: string[] = [];
+    let pay2ReachOrderSelectors: string[] = [];
+    let pay2ReachPaySelectors: string[] = [];
+
+    try {
+        diamondLoupeSelectors = getSelectorsFromABI("DiamondLoupeFacet");
+        ownershipSelectors = getSelectorsFromABI("OwnershipFacet");
+        pay2ReachOrderSelectors = getSelectorsFromABI("Pay2ReachOrderFacet");
+        pay2ReachPaySelectors = getSelectorsFromABI("Pay2ReachPayFacet");
+
+        console.log("DiamondLoupeFacet selectors:", diamondLoupeSelectors);
+        console.log("OwnershipFacet selectors:", ownershipSelectors);
+        console.log("Pay2ReachOrderFacet selectors:", pay2ReachOrderSelectors);
+        console.log("Pay2ReachPayFacet selectors:", pay2ReachPaySelectors);
+    } catch (error) {
+        console.error("Error getting function selectors:", error);
+    }
+
+    // Create cut array for adding facets
+    const cut = [
+        {
+            facetAddress: diamondLoupeFacetAddress,
+            action: FacetCutAction.Add,
+            functionSelectors: diamondLoupeSelectors
+        },
+        {
+            facetAddress: ownershipFacetAddress,
+            action: FacetCutAction.Add,
+            functionSelectors: ownershipSelectors
+        },
+        {
+            facetAddress: pay2ReachOrderFacetAddress,
+            action: FacetCutAction.Add,
+            functionSelectors: pay2ReachOrderSelectors
+        },
+        {
+            facetAddress: pay2ReachPayFacetAddress,
+            action: FacetCutAction.Add,
+            functionSelectors: pay2ReachPaySelectors
+        }
+    ];
+
+    console.log("Cutting diamond with facets...");
+    const diamondCutFacet = await hre.ethers.getContractAt("DiamondCutFacet", diamondAddress);
+    const tx = await diamondCutFacet.diamondCut(cut, "0x0000000000000000000000000000000000000000", "0x");
+    const receipt = await tx.wait();
+    if (!receipt.status) {
+        throw Error(`Diamond cut failed: ${tx.hash}`);
+    }
+    console.log("Diamond cut complete!");
+
     // Save deployment info
     const deploymentInfo = {
         network: hre.network.name,
@@ -84,7 +174,6 @@ async function main() {
             DiamondCutFacet: diamondCutFacetAddress,
             DiamondLoupeFacet: diamondLoupeFacetAddress,
             OwnershipFacet: ownershipFacetAddress,
-            PayToReachManageFacet: payToReachManageFacetAddress,
             Pay2ReachOrderFacet: pay2ReachOrderFacetAddress,
             Pay2ReachPayFacet: pay2ReachPayFacetAddress
         }

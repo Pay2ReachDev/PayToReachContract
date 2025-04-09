@@ -170,13 +170,20 @@ function loadHardhatConfig() {
       networks['bscTestnet'] = 'https://data-seed-prebsc-1-s1.binance.org:8545';
     }
 
+    // Direct fallback for BSC Mainnet if it's not found by regex
+    if (!networks['bsc'] && process.env.BSC_URL) {
+      networks['bsc'] = process.env.BSC_URL;
+    } else if (!networks['bsc']) {
+      networks['bsc'] = 'https://bsc-dataseed.binance.org/';
+    }
     return networks;
   } catch (error: any) {
     console.error('Error loading hardhat config:', error.message);
     // Always provide at least hardhat and bscTestnet as fallbacks
     return {
       hardhat: 'http://localhost:8545',
-      bscTestnet: process.env.BSC_TESTNET_URL || 'https://data-seed-prebsc-1-s1.binance.org:8545'
+      bscTestnet: process.env.BSC_TESTNET_URL || 'https://data-seed-prebsc-1-s1.binance.org:8545',
+      bsc: process.env.BSC_URL || 'https://bsc-dataseed.binance.org/'
     };
   }
 }
@@ -1135,7 +1142,8 @@ async function main() {
   // Load networks from hardhat config
   const networks = loadHardhatConfig() || {
     hardhat: 'http://localhost:8545',
-    bscTestnet: process.env.BSC_TESTNET_URL || 'https://data-seed-prebsc-1-s1.binance.org:8545'
+    bscTestnet: process.env.BSC_TESTNET_URL || 'https://data-seed-prebsc-1-s1.binance.org:8545',
+    bscMainnet: process.env.BSC_MAINNET_URL || 'https://bsc-dataseed.binance.org/'
   };
 
   // Load contract artifacts
