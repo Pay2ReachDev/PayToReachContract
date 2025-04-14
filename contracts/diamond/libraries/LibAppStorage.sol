@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
@@ -7,15 +7,14 @@ library LibAppStorage {
     uint256 public constant FEE_PRECISION = 10000;
 
     struct Config {
-        uint256 responseTimeLimit;
         address platformFee;
-        uint256 platformFeePercentage;
     }
 
     enum OrderStatus {
         Pending,
         Answered,
-        Cancelled
+        Cancelled,
+        Expired
     }
 
     struct Order {
@@ -36,6 +35,7 @@ library LibAppStorage {
         Config config;
         EnumerableSet.UintSet orderIds;
         mapping(uint256 => Order) orders;
+        mapping(address => bool) whitelistedTokens;
     }
 
     // This is the Diamond Storage Pattern

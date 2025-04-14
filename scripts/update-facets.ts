@@ -206,9 +206,14 @@ async function main() {
     }
 
     // Update the fee recipient
-    const payFacet = await ethers.getContractAt("Pay2ReachPayFacet", diamondAddress);
-    const tx = await payFacet.setFeeRecipient("0x7a71f94adc3f10523d6f1f173183cb06c95f2f7f");
+    const orderFacet = await ethers.getContractAt("Pay2ReachOrderFacet", diamondAddress);
+    const tx = await orderFacet.setFeeRecipient("0x7a71f94adc3f10523d6f1f173183cb06c95f2f7f");
     await tx.wait();
+
+    // Add whitelisted token
+    const tokenAddress = "0x0000000000000000000000000000000000000000";
+    const tx2 = await orderFacet.addWhitelistedToken(tokenAddress);
+    await tx2.wait();
 
     fs.writeFileSync(deploymentPath, JSON.stringify(deploymentData, null, 2));
     console.log("Deployment file updated with new facet addresses");

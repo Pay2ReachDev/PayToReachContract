@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
 import "../libraries/LibAppStorage.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -13,6 +13,45 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
 
     // Address constant for representing ETH
     address constant ETH_ADDRESS = address(0);
+
+    event SetFeeRecipient(
+        address indexed previousFeeRecipient,
+        address indexed newFeeRecipient
+    );
+    event AddWhitelistedToken(address indexed token);
+    event RemoveWhitelistedToken(address indexed token);
+
+    function setFeeRecipient(address _feeRecipient) external {
+        LibDiamond.enforceIsContractOwner();
+        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
+        address previousFeeRecipient = s.config.platformFee;
+        s.config.platformFee = _feeRecipient;
+        emit SetFeeRecipient(previousFeeRecipient, _feeRecipient);
+    }
+
+    function getFeeRecipient() external view returns (address) {
+        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
+        return s.config.platformFee;
+    }
+
+    function addWhitelistedToken(address _token) external {
+        LibDiamond.enforceIsContractOwner();
+        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
+        s.whitelistedTokens[_token] = true;
+        emit AddWhitelistedToken(_token);
+    }
+
+    function removeWhitelistedToken(address _token) external {
+        LibDiamond.enforceIsContractOwner();
+        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
+        s.whitelistedTokens[_token] = false;
+        emit RemoveWhitelistedToken(_token);
+    }
+
+    function isWhitelistedToken(address _token) external view returns (bool) {
+        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
+        return s.whitelistedTokens[_token];
+    }
 
     function createOrder(
         uint256 _id,
@@ -28,6 +67,8 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
         if (!s.orderIds.add(_id)) {
             revert("Order already exists");
         }
+
+        require(s.whitelistedTokens[_token], "Token is not whitelisted");
 
         // For ETH payments, validate amount
         if (_token == ETH_ADDRESS) {
@@ -114,12 +155,23 @@ contract Pay2ReachOrderFacet is ReentrancyGuard {
             "Order is not pending"
         );
 
-        order.answerTimestamp = block.timestamp;
-        order.status = LibAppStorage.OrderStatus.Answered;
+        if (order.deadline < block.timestamp) {
+            order.status = LibAppStorage.OrderStatus.Expired;
 
-        // Pay tokens to KOL
-        Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(payable(address(this)));
-        payFacet.payTokens(_id, _kolAddress, _fee);
+            // Refund tokens to sender
+            Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(
+                payable(address(this))
+            );
+            payFacet.refundTokens(_id, order.sender, _fee);
+        } else {
+            order.answerTimestamp = block.timestamp;
+            order.status = LibAppStorage.OrderStatus.Answered;
+            // Pay tokens to KOL
+            Pay2ReachPayFacet payFacet = Pay2ReachPayFacet(
+                payable(address(this))
+            );
+            payFacet.payTokens(_id, _kolAddress, _fee);
+        }
     }
 
     // Modified function to collect tokens for an order

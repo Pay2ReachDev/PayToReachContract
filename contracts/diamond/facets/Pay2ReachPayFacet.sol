@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
 import "../libraries/LibAppStorage.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -14,8 +14,8 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
     // Address constant for representing ETH
     address constant ETH_ADDRESS = address(0);
 
-    modifier onlyOwnerOrSelf() {
-        LibDiamond.enforceIsContractOwnerOrSelf();
+    modifier onlySelf() {
+        require(msg.sender == address(this), "LibDiamond: Must be self");
         _;
     }
 
@@ -41,16 +41,6 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
         uint256 fee
     );
 
-    function setFeeRecipient(address _feeRecipient) external onlyOwnerOrSelf {
-        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
-        s.config.platformFee = _feeRecipient;
-    }
-
-    function getFeeRecipient() external view returns (address) {
-        LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
-        return s.config.platformFee;
-    }
-
     /**
      * @dev Collect tokens from user when an order is created
      * @param _orderId The ID of the order
@@ -63,7 +53,7 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
         uint256 _amount,
         address _tokenAddress,
         address _sender
-    ) external onlyOwnerOrSelf {
+    ) external onlySelf {
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         LibAppStorage.Order storage order = s.orders[_orderId];
 
@@ -95,7 +85,7 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
         uint256 _orderId,
         address _sender,
         uint256 _fee
-    ) external onlyOwnerOrSelf {
+    ) external onlySelf {
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         LibAppStorage.Order storage order = s.orders[_orderId];
 
@@ -143,7 +133,7 @@ contract Pay2ReachPayFacet is ReentrancyGuard {
         uint256 _orderId,
         address _kolAddress,
         uint256 _fee
-    ) external onlyOwnerOrSelf {
+    ) external onlySelf {
         LibAppStorage.AppStorage storage s = LibAppStorage.appStorage();
         LibAppStorage.Order storage order = s.orders[_orderId];
 

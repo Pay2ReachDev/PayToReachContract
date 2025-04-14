@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
 interface IDiamondLoupe {
     /// @notice Gets all facet addresses and their function selectors.
