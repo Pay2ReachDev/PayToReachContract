@@ -69,36 +69,6 @@ npm install
 npx hardhat compile
 ```
 
-## Contract Architecture
-
-The PaytoReach contract implements the following core data structures and functions:
-
-### Data Structures
-
-1. **KOLProfile**: Stores KOL information
-   - Wallet address
-   - Social media ID
-   - Verification status
-   - Message price
-   - Pending and available balances
-
-2. **Message**: Stores message information
-   - Sender address
-   - Message content
-   - Timestamp
-   - Amount
-   - Reply status
-
-### Main Functions
-
-1. **registerAsKOL**: Users register as KOLs
-2. **verifyKOL**: Platform owner verifies KOL identity
-3. **sendMessage**: Send paid messages to KOLs
-4. **answerMessage**: KOLs reply to messages
-5. **processRefund**: Process refunds for expired unreplied messages
-6. **withdrawKOLBalance**: KOLs withdraw available balance
-7. **withdrawPlatformFees**: Platform withdraws service fees
-
 ## Testing
 
 The project includes a comprehensive test suite covering all major contract functions.
@@ -153,8 +123,8 @@ The contract implements various security mechanisms:
 
 ## Fee Model
 
-- Platform charges a 5% service fee (based on 1000, set to 50)
-- KOLs not replying to messages in time results in a 50% refund to users
+- Platform charges a 10% service fee (based on 1000, set to 100)
+- KOLs not replying to messages in time results in a 90% refund to users
 - KOLs receive the remaining income (minus platform fees and possible refunds)
 
 ## License
